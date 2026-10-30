@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,10 +10,12 @@
     <link rel="stylesheet" href="css/root.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 </head>
-<body>
 
+<body>
+    <div class="search-overlay"></div>
     <!-- Header -->
     <header class="header">
         <div class="container header-inner">
@@ -33,18 +35,29 @@
             </nav>
 
             <div class="header-actions">
-                <button class="icon-btn" aria-label="جستجو">
-                    <svg viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="7"/>
-                        <path d="m16 16 4 4"/>
-                    </svg>
-                </button>
+
+                <div class="search-wrapper">
+
+                    <div class="search-box">
+                        <input type="text" id="productSearch" placeholder="دنبال چی می‌گردی؟" autocomplete="off">
+                    </div>
+
+                    <div class="search-results" id="searchResults"></div>
+
+                    <button class="icon-btn search-toggle">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="m16 16 4 4" />
+                        </svg>
+                    </button>
+
+                </div>
 
                 <button class="icon-btn cart-icon" aria-label="سبد خرید">
                     <svg viewBox="0 0 24 24">
-                        <path d="M3 3h2l2.5 12h11L21 7H6"/>
-                        <circle cx="9" cy="19" r="1"/>
-                        <circle cx="17" cy="19" r="1"/>
+                        <path d="M3 3h2l2.5 12h11L21 7H6" />
+                        <circle cx="9" cy="19" r="1" />
+                        <circle cx="17" cy="19" r="1" />
                     </svg>
                     <span class="cart-count">2</span>
                 </button>
@@ -96,10 +109,7 @@
 
             <div class="hero-visual">
                 <div class="hero-circle">
-                    <img
-                        src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=900"
-                        alt="سبد محصولات تازه"
-                    >
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=900" alt="سبد محصولات تازه">
                 </div>
                 <div class="floating-card floating-top">
                     <span>✦</span>
@@ -336,7 +346,7 @@
             <span>⌂</span>
             خانه
         </a>
-        <a href="#categories">
+        <a href="#categories" >
             <span>▦</span>
             دسته‌بندی
         </a>
@@ -350,5 +360,116 @@
         </a>
     </nav>
 
+    <script>
+        const searchOverlay = document.querySelector('.search-overlay');
+        const searchWrapper = document.querySelector('.search-wrapper');
+        const searchToggle = document.querySelector('.search-toggle');
+        const searchInput = document.querySelector('#productSearch');
+        const searchResults = document.querySelector('#searchResults');
+
+        function closeSearch() {
+            searchWrapper.classList.remove('active');
+            searchOverlay.classList.remove('active');
+
+            searchInput.value = '';
+            searchResults.classList.remove('show');
+            searchResults.innerHTML = '';
+        }
+
+        searchToggle.addEventListener('click', () => {
+            const isOpen = searchWrapper.classList.contains('active');
+
+            if (isOpen) {
+                closeSearch();
+            } else {
+                searchWrapper.classList.add('active');
+                searchOverlay.classList.add('active');
+                searchInput.focus();
+            }
+        });
+
+        searchOverlay.addEventListener('click', closeSearch);
+        
+        // بستن جستجو با کلیک بیرون
+        document.addEventListener('click', (event) => {
+            if (!searchWrapper.contains(event.target)) {
+                closeSearch();
+            }
+        });
+
+        // جستجوی محصولات
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim().toLowerCase();
+
+            searchResults.innerHTML = '';
+
+            if (!query) {
+                searchResults.classList.remove('show');
+                return;
+            }
+
+            const products = document.querySelectorAll('.product-card');
+
+            const results = [...products].filter(product => {
+                const name = product.querySelector('h3')?.textContent.trim() || '';
+                const category = product.querySelector('.product-category')?.textContent.trim() || '';
+
+                return name.toLowerCase().includes(query) ||
+                    category.toLowerCase().includes(query);
+            });
+
+            if (results.length === 0) {
+                searchResults.innerHTML =
+                    '<div class="search-empty">محصولی پیدا نشد!</div>';
+            } else {
+                results.forEach(product => {
+                    const name = product.querySelector('h3')?.textContent.trim() || '';
+                    const price = product.querySelector('.price strong')?.textContent.trim() || '';
+                    const image = product.querySelector('.product-image img')?.src || '';
+
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+
+                    const img = document.createElement('img');
+                    img.src = image;
+                    img.alt = name;
+
+                    const info = document.createElement('div');
+                    info.className = 'search-result-info';
+
+                    const title = document.createElement('strong');
+                    title.textContent = name;
+
+                    const priceText = document.createElement('span');
+                    priceText.textContent = price ? `${price} تومان` : '';
+
+                    info.append(title, priceText);
+                    item.append(img, info);
+
+                    item.addEventListener('click', () => {
+                        product.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+
+                        closeSearch();
+                    });
+
+                    searchResults.appendChild(item);
+                });
+            }
+
+            searchResults.classList.add('show');
+        });
+
+        // بستن با Escape
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeSearch();
+            }
+        });
+
+    </script>
 </body>
+
 </html>
